@@ -11,5 +11,13 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     db_path: str = "fastforge.db"
 
+    # Database connection string. Defaults to a local SQLite file so the app
+    # runs with no external services; override via DATABASE_URL in the env.
+    database_url: str = "sqlite:///./fastforge.db"
+
+    # Secret used to sign authentication tokens. MUST be overridden in any
+    # real deployment via SECRET_KEY in the environment.
+    secret_key: str = "dev-insecure-change-me"
+
 
 settings = Settings()
