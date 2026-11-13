@@ -1,0 +1,20 @@
+$kind: collection
+description: |-
+  Tests for the FastForge users/auth API, including mass-assignment protection.
+
+  **Run order:** use the Collection Runner top to bottom, or run folders 1 → 5 in order. Signup creates a fresh user with a unique email each run and the login saves the token automatically.
+
+  **Admin folder:** there is no API to create an admin (by design). Sign up an account, then promote it in the database from the project folder:
+
+  ```
+  .venv/bin/python -c "import sqlite3; c=sqlite3.connect('fastforge.db'); c.execute(\"UPDATE users SET is_admin=1, role='admin' WHERE email='admin@example.com'\"); c.commit()"
+  ```
+
+  Then set `adminEmail` and `adminPassword` in the environment.
+variables:
+  userEmail: ""
+  otherEmail: ""
+  userId: ""
+  otherUserId: ""
+  userToken: ""
+  adminToken: ""

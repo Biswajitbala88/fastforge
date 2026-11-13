@@ -1,0 +1,22 @@
+$kind: http-request
+name: PATCH /users/me with is_admin → 422
+description: A normal user tries to set `is_admin` on their own profile. Must be rejected with 422.
+url: "{{baseUrl}}/users/me"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "is_admin": true
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{userToken}}"
+scripts:
+  - type: afterResponse
+    code: pm.test("Status is 422", () => pm.response.to.have.status(422));
+    language: text/javascript
+order: 3000

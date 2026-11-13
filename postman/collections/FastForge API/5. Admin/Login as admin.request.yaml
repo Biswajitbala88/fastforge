@@ -1,0 +1,18 @@
+$kind: http-request
+description: Needs an existing admin account. See the collection description for how to make one.
+url: "{{baseUrl}}/auth/login"
+method: POST
+body:
+  type: urlencoded
+  content:
+    username: "{{adminEmail}}"
+    password: "{{adminPassword}}"
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 200", () => pm.response.to.have.status(200));
+      pm.collectionVariables.set("adminToken", pm.response.json().access_token);
+    language: text/javascript
+order: 1000

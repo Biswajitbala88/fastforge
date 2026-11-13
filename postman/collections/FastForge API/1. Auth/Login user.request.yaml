@@ -1,0 +1,18 @@
+$kind: http-request
+description: OAuth2 form login. `username` is the email. Saves the token as `userToken`.
+url: "{{baseUrl}}/auth/login"
+method: POST
+body:
+  type: urlencoded
+  content:
+    username: "{{userEmail}}"
+    password: "{{password}}"
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 200", () => pm.response.to.have.status(200));
+      pm.collectionVariables.set("userToken", pm.response.json().access_token);
+    language: text/javascript
+order: 4000

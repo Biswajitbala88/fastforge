@@ -1,0 +1,30 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/users/{{otherUserId}}"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "role": "admin",
+      "is_admin": true
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+scripts:
+  - type: beforeRequest
+    code: |-
+      if (!pm.collectionVariables.get("adminToken")) {
+        console.warn("No adminToken: run 'Login as admin' first (see collection description).");
+      }
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 200", () => pm.response.to.have.status(200));
+      pm.test("Promoted", () => pm.expect(pm.response.json().is_admin).to.eql(true));
+    language: text/javascript
+order: 4000

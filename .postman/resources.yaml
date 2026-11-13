@@ -1,0 +1,15 @@
+# Use this workspace to collaborate
+workspace:
+  id: 05483df6-6373-438a-bfd6-e09c37f8c1c9
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ../postman/collections/FastForge API: 393464a9-4380-4afa-9333-8945ca48ebe9
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/

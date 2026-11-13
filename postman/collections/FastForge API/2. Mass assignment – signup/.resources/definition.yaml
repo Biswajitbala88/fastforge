@@ -1,0 +1,3 @@
+$kind: collection
+description: Every request here sends an extra field at signup. All must return 422.
+order: 3000

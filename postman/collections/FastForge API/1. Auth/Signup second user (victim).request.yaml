@@ -1,0 +1,26 @@
+$kind: http-request
+description: A second account, used to check that one user can't read another's record.
+url: "{{baseUrl}}/auth/signup"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Victim",
+      "email": "{{otherEmail}}",
+      "password": "{{password}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: beforeRequest
+    code: pm.collectionVariables.set("otherEmail", `victim_${Date.now()}@example.com`);
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 201", () => pm.response.to.have.status(201));
+      pm.collectionVariables.set("otherUserId", pm.response.json().id);
+    language: text/javascript
+order: 2000

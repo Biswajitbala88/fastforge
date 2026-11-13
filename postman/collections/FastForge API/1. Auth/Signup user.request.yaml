@@ -1,0 +1,33 @@
+$kind: http-request
+description: Creates a fresh user with a unique email each run and stores `userEmail` and `userId`.
+url: "{{baseUrl}}/auth/signup"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "John Doe",
+      "email": "{{userEmail}}",
+      "password": "{{password}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: beforeRequest
+    code: pm.collectionVariables.set("userEmail", `john_${Date.now()}@example.com`);
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 201", () => pm.response.to.have.status(201));
+      const u = pm.response.json();
+      pm.collectionVariables.set("userId", u.id);
+      pm.test("New user is unprivileged", () => {
+        pm.expect(u.is_admin).to.eql(false);
+        pm.expect(u.is_superuser).to.eql(false);
+        pm.expect(u.role).to.eql("user");
+      });
+      pm.test("No password in response", () => pm.expect(u).to.not.have.property("hashed_password"));
+    language: text/javascript
+order: 1000
