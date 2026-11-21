@@ -14,6 +14,7 @@ Security properties enforced here:
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin, get_current_user
@@ -35,6 +36,26 @@ from app.schemas.user import (
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 users_router = APIRouter(prefix="/users", tags=["users"])
 
+_EMAIL_TAKEN = "A user with this email already exists"
+
+
+def _commit_or_conflict(db: Session) -> None:
+    """Commit, mapping a unique-email violation to 409 instead of a 500.
+
+    The pre-commit email lookups give a friendly error in the common case, but
+    two concurrent requests can both pass that check. The database's unique
+    index on ``users.email`` is the real guard; this turns its violation into
+    the same 409 the pre-check returns. ``email`` is the only unique column a
+    request can influence, and all NOT NULL columns are always set server-side.
+    """
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=_EMAIL_TAKEN
+        ) from None
+
 
 # --- Registration & login ---------------------------------------------------
 
@@ -46,7 +67,7 @@ def signup(payload: UserSignup, db: Session = Depends(get_db)) -> User:
     if db.query(User).filter(User.email == payload.email).first() is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="A user with this email already exists",
+            detail=_EMAIL_TAKEN,
         )
 
     # Explicit field mapping. Privileged columns are set server-side to safe
@@ -61,7 +82,7 @@ def signup(payload: UserSignup, db: Session = Depends(get_db)) -> User:
         is_active=True,
     )
     db.add(user)
-    db.commit()
+    _commit_or_conflict(db)
     db.refresh(user)
     return user
 
@@ -109,7 +130,7 @@ def update_own_profile(
         if clash is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="A user with this email already exists",
+                detail=_EMAIL_TAKEN,
             )
 
     # Explicit, allow-listed field mapping. The schema cannot carry privileged
@@ -121,7 +142,7 @@ def update_own_profile(
     if "password" in updates:
         current_user.hashed_password = hash_password(updates["password"])
 
-    db.commit()
+    _commit_or_conflict(db)
     db.refresh(current_user)
     return current_user
 
@@ -177,7 +198,7 @@ def admin_update_user(
         if clash is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="A user with this email already exists",
+                detail=_EMAIL_TAKEN,
             )
 
     # Explicit mapping of the admin-permitted fields only.
@@ -194,6 +215,6 @@ def admin_update_user(
     if "is_active" in updates:
         user.is_active = updates["is_active"]
 
-    db.commit()
+    _commit_or_conflict(db)
     db.refresh(user)
     return user

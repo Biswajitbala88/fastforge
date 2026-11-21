@@ -178,3 +178,67 @@ def test_admin_update_still_rejects_unknown_fields(
     )
     # ``password`` is not an admin-editable field in AdminUserUpdate.
     assert resp.status_code == 422
+
+
+# --- Concurrency: unique-email races ---------------------------------------
+#
+# Two simultaneous requests can both pass the "is this email taken?" lookup
+# before either commits. These tests force that interleaving deterministically
+# by making the pre-check miss, so the database's unique index is what catches
+# the duplicate. The API must answer 409, never 500.
+
+
+class _PreCheckMiss:
+    """Stands in for ``db.query(User).filter(...)`` and always finds nothing."""
+
+    def filter(self, *args, **kwargs):
+        return self
+
+    def first(self):
+        return None
+
+
+def _force_precheck_miss(monkeypatch, db_session):
+    monkeypatch.setattr(db_session, "query", lambda *a, **k: _PreCheckMiss())
+
+
+def test_signup_race_returns_409_not_500(client, db_session, monkeypatch):
+    assert _signup(client).status_code == 201
+
+    _force_precheck_miss(monkeypatch, db_session)
+    resp = _signup(client)
+    assert resp.status_code == 409, resp.text
+    assert resp.json()["detail"] == "A user with this email already exists"
+
+    # The failed transaction was rolled back; the session is still usable.
+    monkeypatch.undo()
+    assert _signup(client, email="next@example.com").status_code == 201
+
+
+def test_profile_email_change_race_returns_409(
+    client, db_session, monkeypatch, auth_headers_for
+):
+    _signup(client)
+    _signup(client, email="taken@example.com")
+    headers = auth_headers_for("john@example.com")
+
+    _force_precheck_miss(monkeypatch, db_session)
+    resp = client.patch(
+        "/users/me", json={"email": "taken@example.com"}, headers=headers
+    )
+    assert resp.status_code == 409, resp.text
+
+
+def test_admin_email_change_race_returns_409(
+    client, db_session, monkeypatch, admin_user, auth_headers_for
+):
+    target = _signup(client).json()
+    headers = auth_headers_for("admin@example.com")
+
+    _force_precheck_miss(monkeypatch, db_session)
+    resp = client.patch(
+        f"/users/{target['id']}",
+        json={"email": "admin@example.com"},
+        headers=headers,
+    )
+    assert resp.status_code == 409, resp.text
