@@ -1,12 +1,12 @@
 $kind: collection
 description: |-
-  Tests for the FastForge auth API (register, login, me).
+  Tests for the FastForge auth API (register, login, me, forgot/reset password).
 
   **Run order:** use the Collection Runner top to bottom. Register creates a fresh user with a unique email each run, and Login saves the token automatically for the `/auth/me` requests.
+
+  **Password reset:** run the server with `DEBUG=true` so `/auth/forgot-password` returns the reset token and the collection saves it as `resetToken`. With `DEBUG=false`, copy the token from the reset link in the server log and set `resetToken` by hand.
 variables:
   userEmail: ""
   userId: ""
   userToken: ""
-  otherEmail: ""
-  otherUserId: ""
-  adminToken: ""
+  resetToken: ""

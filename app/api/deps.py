@@ -8,6 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from app.core.security.jwt import decode_access_token
 from app.db.database import get_db
+from app.db.repositories.password_reset_repository import PasswordResetRepository
 from app.db.repositories.user_repository import UserRepository
 from app.schemas.user import UserResponse
 
@@ -18,6 +19,12 @@ def get_user_repository(
     conn: Annotated[sqlite3.Connection, Depends(get_db)]
 ) -> UserRepository:
     return UserRepository(conn)
+
+
+def get_password_reset_repository(
+    conn: Annotated[sqlite3.Connection, Depends(get_db)]
+) -> PasswordResetRepository:
+    return PasswordResetRepository(conn)
 
 
 def get_current_user(

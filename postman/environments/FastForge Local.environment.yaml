@@ -4,5 +4,7 @@ values:
     value: 'http://127.0.0.1:8000'
   - key: password
     value: password123
+  - key: newPassword
+    value: newpassword456
   - key: userEmail
     value: ''

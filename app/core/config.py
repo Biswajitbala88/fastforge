@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     secret_key: str = "fastforge-insecure-dev-secret-key-change-in-production"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    password_reset_token_expire_minutes: int = 15
+    # Base URL of the frontend page that handles password resets; the reset
+    # token is appended as ?token=... in the link sent to the user.
+    password_reset_url: str = "http://127.0.0.1:8000/reset-password"
     db_path: str = "fastforge.db"
 
     # Database connection string. Defaults to a local SQLite file so the app
