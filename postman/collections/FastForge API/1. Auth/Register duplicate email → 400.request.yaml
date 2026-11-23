@@ -1,6 +1,6 @@
 $kind: http-request
 description: ""
-url: "{{baseUrl}}/auth/signup"
+url: "{{baseUrl}}/auth/register"
 method: POST
 headers:
   Content-Type: application/json
@@ -8,7 +8,6 @@ body:
   type: json
   content: |-
     {
-      "name": "John Doe",
       "email": "{{userEmail}}",
       "password": "{{password}}"
     }
@@ -16,6 +15,6 @@ auth:
   type: noauth
 scripts:
   - type: afterResponse
-    code: pm.test("Status is 409", () => pm.response.to.have.status(409));
+    code: pm.test("Status is 400", () => pm.response.to.have.status(400));
     language: text/javascript
-order: 3000
+order: 2000

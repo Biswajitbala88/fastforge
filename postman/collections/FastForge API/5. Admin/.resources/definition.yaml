@@ -1,3 +1,0 @@
-$kind: collection
-description: Requires an admin account (`adminEmail` / `adminPassword` variables).
-order: 6000

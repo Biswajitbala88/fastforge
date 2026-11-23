@@ -1,0 +1,15 @@
+$kind: http-request
+description: Returns the logged-in user using the saved `userToken`.
+url: "{{baseUrl}}/auth/me"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{userToken}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status is 200", () => pm.response.to.have.status(200));
+      pm.test("Returns the registered user", () => pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get("userEmail")));
+    language: text/javascript
+order: 5000
